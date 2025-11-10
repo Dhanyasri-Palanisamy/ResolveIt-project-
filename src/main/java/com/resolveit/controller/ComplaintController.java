@@ -3,7 +3,6 @@ package com.resolveit.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import com.resolveit.model.Complaint;
 import com.resolveit.service.ComplaintService;
 
@@ -14,7 +13,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/complaints")
-@CrossOrigin(origins = "http://localhost:3000") // allow React frontend
+@CrossOrigin(origins = "http://localhost:3000")
 public class ComplaintController {
 
     @Autowired
@@ -22,7 +21,7 @@ public class ComplaintController {
 
     private static final String UPLOAD_DIR = "uploads/";
 
-    // 📩 Register a new complaint
+    // Register a new complaint
     @PostMapping("/register")
     public Complaint registerComplaint(
             @RequestParam("userName") String userName,
@@ -31,7 +30,6 @@ public class ComplaintController {
             @RequestParam("description") String description,
             @RequestParam(value = "image", required = false) MultipartFile image
     ) throws IOException {
-
         Complaint complaint = new Complaint();
         complaint.setUserName(userName);
         complaint.setUserEmail(userEmail);
@@ -50,19 +48,19 @@ public class ComplaintController {
         return complaintService.submitComplaint(complaint);
     }
 
-    // 📋 Get all complaints
+    // Get all complaints
     @GetMapping("/all")
     public List<Complaint> getAllComplaints() {
         return complaintService.getAllComplaints();
     }
 
-    // 🔍 Get complaint by ID
+    // Get complaint by ID
     @GetMapping("/{id}")
     public Optional<Complaint> getComplaintById(@PathVariable Long id) {
         return complaintService.getComplaintById(id);
     }
 
-    // 🛠️ Update complaint (for officer to mark resolved)
+    // Update complaint (for officer to mark resolved)
     @PutMapping("/update/{id}")
     public Complaint updateComplaint(
             @PathVariable Long id,
@@ -70,8 +68,8 @@ public class ComplaintController {
             @RequestParam(value = "resolutionNote", required = false) String resolutionNote,
             @RequestParam(value = "resolvedImage", required = false) MultipartFile resolvedImage
     ) throws IOException {
-
         String resolvedImagePath = null;
+
         if (resolvedImage != null && !resolvedImage.isEmpty()) {
             String filePath = UPLOAD_DIR + "resolved_" + System.currentTimeMillis() + "_" + resolvedImage.getOriginalFilename();
             File dest = new File(filePath);
@@ -83,10 +81,17 @@ public class ComplaintController {
         return complaintService.updateComplaint(id, status, resolutionNote, resolvedImagePath);
     }
 
-    // ⚠️ Manually trigger escalation check
+    // Manually trigger escalation check
     @PostMapping("/escalate")
     public String escalateOverdueComplaints() {
         complaintService.escalateOverdueComplaints();
         return "Checked and escalated overdue complaints successfully!";
+    }
+
+    // Delete complaint (Admin only)
+    @DeleteMapping("/{id}")
+    public String deleteComplaint(@PathVariable Long id) {
+        complaintService.deleteComplaint(id);
+        return "Complaint " + id + " deleted successfully";
     }
 }

@@ -1,10 +1,9 @@
 package com.resolveit.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.resolveit.model.Complaint;
 import com.resolveit.repository.ComplaintRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,6 +19,8 @@ public class ComplaintService {
     public Complaint submitComplaint(Complaint complaint) {
         complaint.setCreatedAt(LocalDateTime.now());
         complaint.setUpdatedAt(LocalDateTime.now());
+        // Set deadline to 48 hours from creation
+        complaint.setDeadline(LocalDateTime.now().plusHours(48));
         return complaintRepository.save(complaint);
     }
 
@@ -54,16 +55,21 @@ public class ComplaintService {
         LocalDateTime now = LocalDateTime.now();
 
         for (Complaint complaint : complaints) {
-            if (complaint.getDeadline() != null && 
-                now.isAfter(complaint.getDeadline()) && 
-                !complaint.isEscalated() && 
+            if (complaint.getDeadline() != null &&
+                now.isAfter(complaint.getDeadline()) &&
+                !complaint.isEscalated() &&
                 !"Resolved".equalsIgnoreCase(complaint.getStatus())) {
-
+                
                 complaint.setEscalated(true);
                 complaint.setStatus("Escalated");
                 complaint.setUpdatedAt(now);
                 complaintRepository.save(complaint);
             }
         }
+    }
+    
+    // Delete complaint
+    public void deleteComplaint(Long id) {
+        complaintRepository.deleteById(id);
     }
 }
